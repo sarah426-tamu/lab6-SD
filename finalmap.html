@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sarah Drvol TAMU Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map { height: 600px; }
+        .info {
+            padding: 6px 8px;
+            font: 14px/16px Arial, Helvetica, sans-serif;
+            background: white;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        .info h4 {
+            margin: 0 0 5px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    var map = L.map('map').setView([30.6152, -96.3398], 16);
+
+    var tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    
+    var tamuBuildings = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "name": "Academic Building",
+                    "abbreviation": "ACAD"
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-96.340817, 30.618064]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "name": "Evans Library",
+                    "abbreviation": "EVANS"
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [-96.338931, 30.617238]
+                }
+            }
+            
+        ]
+    };
+
+    
+    function style(feature) {
+        return {
+            fillColor: "Maroon",
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            fillOpacity: 0.7
+        };
+    }
+
+    
+    function highlightFeature(e) {
+        var layer = e.target;
+
+        layer.setStyle({
+            weight: 5,
+            color: '#666',
+            fillOpacity: 0.7
+        });
+
+        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+            layer.bringToFront();
+        }
+
+        info.update(layer.feature.properties);
+    }
+
+    
+    function resetHighlight(e) {
+        tamuBuildingsLayer.resetStyle(e.target);
+        info.update();
+    }
+
+    
+    function zoomToFeature(e) {
+        map.fitBounds(e.target.getBounds());
+    }
+
+    
+    var info = L.control();
+
+    info.onAdd = function (map) {
+        this._div = L.DomUtil.create('div', 'info');
+        this.update();
+        return this._div;
+    };
+
+    info.update = function (props) {
+        this._div.innerHTML = '<h4>TAMU Building Info</h4>' +  (props ?
+            '<b>Name:</b> ' + props.name + '<br />' + '<b>Abbreviation:</b> ' + props.abbreviation
+            : 'Hover over a building');
+    };
+
+    info.addTo(map);
+
+    
+    var tamuBuildingsLayer = L.geoJson(tamuBuildings, {
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng);
+        },
+        style: style,
+        onEachFeature: function(feature, layer) {
+            layer.on({
+                mouseover: highlightFeature,
+                mouseout: resetHighlight,
+                click: zoomToFeature
+            });
+        }
+    }).addTo(map);
+</script>
+
+</body>
+</html>
